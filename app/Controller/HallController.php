@@ -45,8 +45,8 @@ class HallController extends AbstractController
             {
                 if ($value['userId'] != '')
                 {
-                    $u = $this->UserModel->getAvataById($value['userId']);
-                    $temp['USERS'][$key]['avatar'] = $u->Avatar ?? '2019070315.jpg';
+                    $a = $this->UserModel->getAvataById($value['userId']);
+                    $temp['USERS'][$key]['avatar'] = $a ?? '2019070315.jpg';
                 }
             }
             $list[] = $temp;

@@ -64,30 +64,31 @@ class WebSocketController implements OnMessageInterface, OnOpenInterface, OnClos
             return;
         }
         $action = isset($data['action']) ? $data['action'] : '';
+        $result = NULL;
         switch ($action) 
         {
             case 'SEATDOWN':
                 $result = $this->UserAction->action($frame->fd, $data, $user);
-                if (isset($result['fds']))
-                {
-                    foreach ($result['fds'] as $fd)
-                    {
-                        $server->push($fd, json_encode($result['data']));
-                    }
-                }
-                else 
-                {
-                    $server->push($frame->fd, json_encode($result));
-                }
                 break;
             case 'GAME_ACTION':
                 $result = $this->GameAction->action($frame->fd, $data, $user);
                 break;
             default:
                 $server->push($frame->fd, json_encode(['result'=>FALSE, 'message'=>"WRONG_ACTION: {$action}", 'data'=>['ACTION'=>'WRONG_ACTION']]));
-                break;
+                return;
         }
-        
+        if (isset($result['fds']))
+        {
+            foreach ($result['fds'] as $fd)
+            {
+                $server->push($fd, json_encode($result['data']));
+            }
+        }
+        else if ($result !== NULL)
+        {
+            $server->push($frame->fd, json_encode($result));
+        }
+        return;
     }
 
     public function onClose(Server $server, int $fd, int $reactorId): void

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Game;
@@ -12,6 +13,14 @@ class UserAction extends BaseAction
 {
 
     private $user;
+
+    protected $UerModel;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->UserModel = new UserModel();
+    }
 
     public function action($fd, $data, $user)
     {
@@ -77,6 +86,7 @@ class UserAction extends BaseAction
         $table['USERS'][$seat-1]['userId'] = $user->id;
         $table['USERS'][$seat-1]['fd'] = $fd;
         $table['USERS'][$seat-1]['username'] = $user->UserName;
+        $table['USERS'][$seat-1]['status'] = 0;
 
         $this->redis->setex($tableKey, 24*60*60*30, json_encode($table));
 
@@ -88,9 +98,10 @@ class UserAction extends BaseAction
         $fds = [];
         if (is_array($table['USERS']))
         {
-            foreach ($table['USERS'] as $v)
+            foreach ($table['USERS'] as $k => $v)
             {
                 if ($v['fd'] != '') $fds[] = $v['fd'];
+                $table['USERS'][$k]['avatar'] = $this->UserModel->getAvataById($v['userId']) ?? '2019070315.jpg';
             }
         }
         $data = ['result'=>TRUE, 'message'=>'', 'data'=>['ACTION'=>'TABLE_UPDATE', 'table'=>$table]];
@@ -128,9 +139,10 @@ class UserAction extends BaseAction
         $fds = [];
         if (isset($table['USERS']))
         {
-            foreach ($table['USERS'] as $v)
+            foreach ($table['USERS'] as $k => $v)
             {
                 if ($v['fd'] != '') $fds[] = $v['fd'];
+                $table['USERS'][$k]['avatar'] = $this->UserModel->getAvataById($v['userId']) ?? '2019070315.jpg';
             }
         }
         echo "SWOOLE_FD_{$fd} LEFT \n";

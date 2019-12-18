@@ -23,7 +23,8 @@ class UserModel extends Model
 
     public function getAvataById($userId)
     {
-        return Db::table('user')->select('Avatar')->where('id', $userId)->first();
+        $user = Db::table('user')->select('Avatar')->where('id', $userId)->first();
+        return $user->Avatar ?? '';
     }
 
     public function createUser($userData)

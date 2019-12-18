@@ -25,7 +25,7 @@ class Init
             $result && $this->redis->del($result);
             for ($t=1; $t<=$game['tableNumber']; $t++)
             {
-                $temp = ['gameCode'=>$key, 'TABLE_PANEL'=>[], 'USERS'=>[]];
+                $temp = ['gameCode'=>$key, 'TABLE_PANEL'=>[], 'USERS'=>[], 'STATUS'=>0];
                 for ($i=1; $i<=$game['tableUserNumber']; $i++) {
                     $temp["USERS"][] = [
                         'seatId'   => $i,
