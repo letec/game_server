@@ -7,19 +7,16 @@ namespace App\Game;
 use App\Controller\AbstractController;
 use Hyperf\Utils\Context;
 use Hyperf\Utils\ApplicationContext;
-use App\Model\UserModel;
 
 class UserAction extends BaseAction
 {
 
     private $user;
 
-    protected $UerModel;
 
     public function __construct()
     {
         parent::__construct();
-        $this->UserModel = new UserModel();
     }
 
     public function action($fd, $data, $user)
@@ -121,18 +118,28 @@ class UserAction extends BaseAction
             {
                 $tableKey = $userStatus['ROOM']; 
                 $table = json_decode($this->redis->get($tableKey), TRUE);
+                foreach ($table['USERS'] as $k => $v) 
+                {
+                    if ($userStatus['SEAT']-1 == $k)
+                    {
+                        foreach ($table['USERS'][$userStatus['SEAT']-1] as $x => $y)
+                        {
+                            $table['USERS'][$k][$x] = '';
+                        }
+                    }
+                    else
+                    {
+                        $table['USERS'][$k]['userId'] != '' && $table['USERS'][$k]['status'] = 0;
+                    }
+                }
                 if (isset($table['USERS'][$userStatus['SEAT']-1]))
                 {
-                    foreach ($table['USERS'][$userStatus['SEAT']-1] as $k => $v)
-                    {
-                        $table['USERS'][$userStatus['SEAT']-1][$k] = '';
-                    }
+                    
+                    $table['STATUS'] = 0;
                     $this->redis->setex($tableKey, 24*60*60*30, json_encode($table));
                 }
-                $userStatus['SEAT'] = '';
-                $userStatus['ROOM'] = '';
             }
-            $this->redis->setex("USER_STATUS_{$user->id}", 15*60, json_encode($userStatus));
+            $this->redis->del("USER_STATUS_{$user->id}");
         }
         $this->redis->del("SWOOLE_FD_{$fd}");
 
@@ -146,7 +153,7 @@ class UserAction extends BaseAction
             }
         }
         echo "SWOOLE_FD_{$fd} LEFT \n";
-        $data = ['result'=>TRUE, 'message'=>'', 'data'=>['ACTION'=>'TABLE_UPDATE', 'table'=>$table]];
+        $data = ['result'=>TRUE, 'message'=>'', 'data'=>['ACTION'=>'PLAYER_LEAVE', 'table'=>$table]];
         return ['fds'=>$fds, 'data'=>$data];
     }
 

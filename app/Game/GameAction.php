@@ -19,12 +19,13 @@ class GameAction extends BaseAction
         $this->user = $user;
         $userStatus = $this->redis->get("USER_STATUS_{$user->id}");
         $userStatus = is_string($userStatus) ? json_decode($userStatus, TRUE) : [];
-        if ( ! isset($userStatus['ROOM']) == '')
+
+        if ( ! isset($userStatus['ROOM']) || $userStatus['ROOM'] == '')
         {
             return ['result'=>FALSE, 'message'=>'您不在一个对局中!', 'data'=>NULL];
         }
 
-        $table = $his->redis->get($userStatus['ROOM']);
+        $table = $this->redis->get($userStatus['ROOM']);
         $table = json_decode((string) $table, TRUE);
         if ( ! isset($table['USERS']))
         {
@@ -32,7 +33,7 @@ class GameAction extends BaseAction
             return ['result'=>FALSE, 'message'=>'参数错误!', 'data'=>NULL];
         }
 
-        $className = ucfirst($table['gameCode']);
+        $className = 'App\Game\\' . ucfirst($table['gameCode']);
         $this->gameClass = new $className();
 
         switch ($data['data']['GAME_ACTION']) 
