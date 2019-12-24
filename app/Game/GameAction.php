@@ -41,7 +41,7 @@ class GameAction extends BaseAction
             case 'READY':
                 return $this->gameClass->ready($fd, $data, $userStatus, $table);
             case 'MOVE':
-                return $this->gameClass->move($fd, $data, $userStatus, $table);
+                return $this->gameClass->move($fd, $data, $user, $userStatus, $table);
             default:
                 break;
         }
