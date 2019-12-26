@@ -142,13 +142,17 @@ class ChineseChess extends BaseAction
 
         $selectedObject = $matrix[$selectedRow][$selectedCol];
         $targetObject = $matrix[$targetRow][$targetCol];
+        if ( ! isset($selectedObject['color']))
+        {
+            var_dump($selectedObject);
+        }
         if ($selectedObject['color'] != $color)
         {
             return ['result'=>FALSE, 'message'=>"不能使用对方的子!", 'data'=>['ACTION'=>'MOVE', 'table'=>$table]];
         }
 
         $check = $this->checkMoveTarget($matrix, $selectedObject, $targetObject, $selectedRow, $selectedCol, $targetRow, $targetCol, $color);
-        if ($check === TRUE)
+        if ($check['result'] === TRUE)
         {
             $matrix[$targetRow][$targetCol] = $selectedObject;
             $matrix[$selectedRow][$selectedCol] = '';
@@ -163,10 +167,6 @@ class ChineseChess extends BaseAction
             }
             $this->redis->setex($userStatus['ROOM'], 24*60*60*30, json_encode($table));
             return ['fds'=>$fds, 'data'=>['result'=>TRUE, 'message'=>'', 'data'=>['ACTION'=>'MOVE', 'table'=>$table]]];
-        }
-        else if (is_array($check))
-        {
-
         }
 
         return ['result'=>FALSE, 'message'=>'不能下这一步棋', 'data'=>['ACTION'=>'MOVE', 'table'=>$table]];
@@ -184,7 +184,8 @@ class ChineseChess extends BaseAction
         {
             return ['result'=>FALSE, 'kingCheck'=>FALSE];
         }
-        $kingCheck = $matrix[$targetRow][$targetCol]['type'] == 'king' ? TRUE : FALSE;
+
+        $kingCheck = (isset($matrix[$targetRow][$targetCol]['type']) && $matrix[$targetRow][$targetCol]['type'] == 'king') ? TRUE : FALSE;
         switch ($selectedObject['type']) 
         {
             // 车
@@ -194,7 +195,7 @@ class ChineseChess extends BaseAction
                     $colDiffer = $selectedCol - $targetCol;
                     if ($colDiffer < 0) 
                     {
-                        for ($col=$selectedCol; $col < $targetCol; $col++) 
+                        for ($col=$selectedCol; $col<$targetCol; $col++) 
                         { 
                             if ($matrix[$selectedRow][$col] != '' && $col != $targetCol)
                             {
@@ -205,7 +206,7 @@ class ChineseChess extends BaseAction
                     }
                     else 
                     {
-                        for ($col=$selectedCol; $col > $targetCol; $col--) 
+                        for ($col=$selectedCol; $col>$targetCol; $col--) 
                         { 
                             if ($matrix[$selectedRow][$col] != '' && $col != $targetCol)
                             {
@@ -241,18 +242,18 @@ class ChineseChess extends BaseAction
                         return ['result'=>TRUE, 'kingCheck'=>$kingCheck];
                     }
                 }
-                return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                break;
             // 马
             case 'knight':
                 $possibleTarget = [
-                    ['col'=>$selectedCol-1, 'row'=>$selectedRow-2],
-                    ['col'=>$selectedCol+1, 'row'=>$selectedRow-2],
-                    ['col'=>$selectedCol+2, 'row'=>$selectedRow-1],
-                    ['col'=>$selectedCol+2, 'row'=>$selectedRow+1],
-                    ['col'=>$selectedCol+1, 'row'=>$selectedRow+2],
-                    ['col'=>$selectedCol-1, 'row'=>$selectedRow+2],
-                    ['col'=>$selectedCol-2, 'row'=>$selectedRow+1],
-                    ['col'=>$selectedCol-2, 'row'=>$selectedRow-1],
+                    ['row'=>$selectedRow-2, 'col'=>$selectedCol-1],
+                    ['row'=>$selectedRow-2, 'col'=>$selectedCol+1],
+                    ['row'=>$selectedRow-1, 'col'=>$selectedCol+2],
+                    ['row'=>$selectedRow+1, 'col'=>$selectedCol+2],
+                    ['row'=>$selectedRow+2, 'col'=>$selectedCol+1],
+                    ['row'=>$selectedRow+2, 'col'=>$selectedCol-1],
+                    ['row'=>$selectedRow+1, 'col'=>$selectedCol-2],
+                    ['row'=>$selectedRow-1, 'col'=>$selectedCol-2],
                 ];
                 foreach ($possibleTarget as $k => $v) 
                 {
@@ -260,7 +261,7 @@ class ChineseChess extends BaseAction
                     {
                         continue;
                     }
-                    if ($matrix[$v['row']][$v['col']] == $matrix[$targetRow][$targetCol])
+                    if ($v['row'] == $targetRow && $v['col'] == $targetCol)
                     {
                         switch ($k) {
                             case 0:
@@ -271,41 +272,259 @@ class ChineseChess extends BaseAction
                                 }
                                 break;
                             case 2:
-                                break;
                             case 3:
+                                if ($matrix[$selectedRow][$selectedCol+1] == '')
+                                {
+                                    return ['result'=>TRUE, 'kingCheck'=>$kingCheck];
+                                }
                                 break;
                             case 4:
-                                break;
                             case 5:
+                                if ($matrix[$selectedRow+1][$selectedCol] == '')
+                                {
+                                    return ['result'=>TRUE, 'kingCheck'=>$kingCheck];
+                                }
                                 break;
                             case 6:
-                                break;
                             case 7:
+                                if ($matrix[$selectedRow][$selectedCol-1] == '')
+                                {
+                                    return ['result'=>TRUE, 'kingCheck'=>$kingCheck];
+                                }
                                 break;
                             default:
-                                return FALSE;
+                                break;
                         }
                     }
                 }
-                return FALSE;
+                break;
             // 象
             case 'elephant':
+                if (($color == 'redChess' && $targetRow < 6) || ($color == 'blackChess' && $targetRow > 5))
+                {
+                    return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                }
+                $possibleTarget = [
+                    ['row'=>$selectedRow-2, 'col'=>$selectedCol-2],
+                    ['row'=>$selectedRow-2, 'col'=>$selectedCol+2],
+                    ['row'=>$selectedRow+2, 'col'=>$selectedCol+2],
+                    ['row'=>$selectedRow+2, 'col'=>$selectedCol-2],
+                ];
+                foreach ($possibleTarget as $k => $v) 
+                {
+                    if ( ! isset($matrix[$v['row']][$v['col']]))
+                    {
+                        continue;
+                    }
+                    if ($v['row'] == $targetRow && $v['col'] == $targetCol)
+                    {
+                        switch ($k) {
+                            case 0:
+                                if ($matrix[$selectedRow-1][$selectedCol-1] == '')
+                                {
+                                    return ['result'=>TRUE, 'kingCheck'=>$kingCheck];
+                                }
+                                break;
+                            case 1:
+                                if ($matrix[$selectedRow-1][$selectedCol+1] == '')
+                                {
+                                    return ['result'=>TRUE, 'kingCheck'=>$kingCheck];
+                                }
+                                break;
+                            case 2:
+                                if ($matrix[$selectedRow+1][$selectedCol+1] == '')
+                                {
+                                    return ['result'=>TRUE, 'kingCheck'=>$kingCheck];
+                                }
+                                break;
+                            case 3:
+                                if ($matrix[$selectedRow+1][$selectedCol-1] == '')
+                                {
+                                    return ['result'=>TRUE, 'kingCheck'=>$kingCheck];
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
                 break;
             // 士
             case 'guard':
+                if ($targetCol < 4 || $targetCol > 6)
+                {
+                    return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                }
+                if (($color == 'redChess' && $targetRow < 8) || ($color == 'blackChess' && $targetRow > 3))
+                {
+                    return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                }
+                $possibleTarget = [
+                    ['row'=>$selectedRow-1, 'col'=>$selectedCol-1],
+                    ['row'=>$selectedRow-1, 'col'=>$selectedCol+1],
+                    ['row'=>$selectedRow+1, 'col'=>$selectedCol+1],
+                    ['row'=>$selectedRow+1, 'col'=>$selectedCol-1],
+                ];
+                foreach ($possibleTarget as $k => $v) 
+                {
+                    if ( ! isset($matrix[$v['row']][$v['col']]))
+                    {
+                        continue;
+                    }
+                    if ($v['row'] == $targetRow && $v['col'] == $targetCol)
+                    {
+                        return ['result'=>TRUE, 'kingCheck'=>$kingCheck];
+                    }
+                }
                 break;
             // 帅
             case 'king':
+                if ($targetCol < 4 || $targetCol > 6)
+                {
+                    return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                }
+                if (($color == 'redChess' && $targetRow < 8) || ($color == 'blackChess' && $targetRow > 3))
+                {
+                    return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                }
+                $possibleTarget = [
+                    ['row'=>$selectedRow+1, 'col'=>$selectedCol],
+                    ['row'=>$selectedRow, 'col'=>$selectedCol+1],
+                    ['row'=>$selectedRow-1, 'col'=>$selectedCol],
+                    ['row'=>$selectedRow, 'col'=>$selectedCol-1],
+                ];
+                foreach ($possibleTarget as $k => $v) 
+                {
+                    if ( ! isset($matrix[$v['row']][$v['col']]))
+                    {
+                        continue;
+                    }
+                    if ($v['row'] == $targetRow && $v['col'] == $targetCol)
+                    {
+                        return ['result'=>TRUE, 'kingCheck'=>$kingCheck];
+                    }
+                }
                 break;
             // 炮
             case 'gunner':
-                break;
+                $piece = 0;
+                if ($selectedRow == $targetRow)
+                {
+                    $colDiffer = $selectedCol - $targetCol;
+                    if ($colDiffer < 0)
+                    {
+                        for ($col=$selectedCol; $col<=$targetCol; $col++)
+                        {
+                            if ($piece > 1)
+                            {
+                                return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                            }
+                            else if ($matrix[$selectedRow][$col] != '' && ! in_array($col, [$selectedCol, $targetCol]))
+                            {
+                                $piece ++;
+                            }
+                            if ($targetCol == $col && $piece > 0 && $matrix[$targetRow][$col] == '')
+                            {
+                                return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for ($col=$selectedCol; $col>=$targetCol; $col--) 
+                        { 
+                            if ($piece > 1)
+                            {
+                                return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                            }
+                            else if ($matrix[$selectedRow][$col] != '' && ! in_array($col, [$selectedCol, $targetCol]))
+                            {
+                                $piece ++;
+                            }
+                            if ($targetCol == $col && $piece > 0 && $matrix[$targetRow][$col] == '')
+                            {
+                                return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                            }
+                        }
+                    }
+                }
+                else if ($selectedCol == $targetCol)
+                {
+                    $rowDiffer = $selectedRow - $targetRow;
+                    if ($rowDiffer < 0) 
+                    {
+                        for ($row=$selectedRow; $row<=$targetRow; $row++) 
+                        { 
+                            if ($piece > 1)
+                            {
+                                return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                            }
+                            else if ($matrix[$row][$selectedCol] != '' && ! in_array($row, [$selectedRow, $targetRow]))
+                            {
+                                $piece ++;
+                            }
+                            if ($targetRow == $row && $piece > 0 && $matrix[$targetRow][$targetCol] == '')
+                            {
+                                return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for ($row=$selectedRow; $row>=$targetRow; $row--) 
+                        { 
+                            if ($piece > 1)
+                            {
+                                return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                            }
+                            else if ($matrix[$row][$selectedCol] != '' && ! in_array($row, [$selectedRow, $targetRow]))
+                            {
+                                $piece ++;
+                            }
+                            if ($targetRow == $row && $piece > 0 && $matrix[$targetRow][$targetCol] == '')
+                            {
+                                return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                            }
+                        }
+                    }
+                }
+                if ($piece < 1 && $matrix[$targetRow][$targetCol] != '')
+                {
+                    return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
+                }
+                return ['result'=>TRUE, 'kingCheck'=>$kingCheck];
             // 兵
             case 'soldier':
+                $possibleTarget = [];
+                if ($color == 'redChess')
+                {
+                    $possibleTarget[] = ['row'=>$selectedRow-1, 'col'=>$selectedCol];
+                }
+                else
+                {
+                    $possibleTarget[] = ['row'=>$selectedRow+1, 'col'=>$selectedCol];
+                }
+                if (($color == 'redChess' && $selectedRow < 6) || ($color == 'blackChess' && $selectedRow > 5))
+                {
+                    $possibleTarget[] = ['row'=>$selectedRow, 'col'=>$selectedCol+1];
+                    $possibleTarget[] = ['row'=>$selectedRow, 'col'=>$selectedCol-1];
+                }
+                foreach ($possibleTarget as $k => $v) 
+                {
+                    if ( ! isset($matrix[$v['row']][$v['col']]))
+                    {
+                        continue;
+                    }
+                    if ($v['row'] == $targetRow && $v['col'] == $targetCol)
+                    {
+                        return ['result'=>TRUE, 'kingCheck'=>$kingCheck];
+                    }
+                }
                 break;
             default:
-                return FALSE;
+                break;
         }
+        return ['result'=>FALSE, 'kingCheck'=>$kingCheck];
     }
 
 
