@@ -26,8 +26,6 @@ class UserAction extends BaseAction
         {
             case 'SEATDOWN':
                 return $this->seatDown($fd, $data);
-            case '':
-                break;
             default:
                 break;
         }

@@ -46,9 +46,18 @@ class GameAction extends BaseAction
                 return $this->gameClass->chat($fd, $data, $user, $userStatus, $table);
             case 'GIVE_UP':
                 return $this->gameClass->giveUp($fd, $data, $user, $userStatus, $table);
+            case 'ASK_FOR_DRAW':
+                if (in_array($table['gameCode'], ['ChineseChess']))
+                {
+                    return $this->gameClass->askForDraw($fd, $data, $user, $userStatus, $table);
+                }
+                break;
+            case 'REPLY_FOR_DRAW':
+                return $this->gameClass->replyForDraw($fd, $data, $user, $userStatus, $table);
             default:
                 break;
         }
+
     }
 
 

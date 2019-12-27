@@ -558,12 +558,42 @@ class ChineseChess extends BaseAction
 
     public function giveUp($fd, $data, $user, $userStatus, $table)
     {
+        $fds = [];
         foreach ($table['USERS'] as $k => $v)
         {
             if ($v['fd'] != '') $fds[] = $v['fd'];
         }
         $username = $user->UserName == $table['USERS'][0]['username'] ? $table['USERS'][1]['username'] : $table['USERS'][0]['username'];
         return $this->gameOver($fds, $username, $table, $userStatus['ROOM']);
+    }
+
+    public function askForDraw($fd, $data, $user, $userStatus, $table)
+    {
+        $fds = [];
+        foreach ($table['USERS'] as $k => $v)
+        {
+            if ($v['fd'] != '') $fds[] = $v['fd'];
+        }
+        $username = $user->UserName;
+        return ['fds'=>$fds, 'data'=>['result'=>TRUE, 'message'=>'', 'data'=>['ACTION'=>'ASK_FOR_DRAW', 'REQUEST_USER'=>$username]]];
+    }
+
+    public function replyForDraw($fd, $data, $user, $userStatus, $table)
+    {
+        $fds = [];
+        foreach ($table['USERS'] as $k => $v)
+        {
+            if ($v['fd'] != '') $fds[] = $v['fd'];
+        }
+        $username = $user->UserName;
+        if ($data['data']['ANSWER'] == FALSE)
+        {
+            return ['fds'=>$fds, 'data'=>['result'=>TRUE, 'message'=>'', 'data'=>['ACTION'=>'REFUSE_FOR_DRAW', 'REPLY_USER'=>$username]]];
+        }
+        else
+        {
+            return $this->gameOver($fds, '', $table, $userStatus['ROOM']);
+        }
     }
 
 }
