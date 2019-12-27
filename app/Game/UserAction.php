@@ -110,6 +110,8 @@ class UserAction extends BaseAction
         $user = $this->redis->get("SWOOLE_FD_{$fd}");
         $user = $user ? json_decode($user) : FALSE;
         $table = NULL;
+        $win = '';
+        $leave = $user->UserName;
         if (isset($user->id))
         {
             $userStatus = $this->redis->get("USER_STATUS_{$user->id}");
@@ -120,6 +122,10 @@ class UserAction extends BaseAction
                 $table = json_decode($this->redis->get($tableKey), TRUE);
                 foreach ($table['USERS'] as $k => $v) 
                 {
+                    if ($v['username'] != $user->id)
+                    {
+                        $win = $v['username'];
+                    }
                     if ($userStatus['SEAT']-1 == $k)
                     {
                         foreach ($table['USERS'][$userStatus['SEAT']-1] as $x => $y)
@@ -153,7 +159,7 @@ class UserAction extends BaseAction
             }
         }
         echo "SWOOLE_FD_{$fd} LEFT \n";
-        $data = ['result'=>TRUE, 'message'=>'', 'data'=>['ACTION'=>'PLAYER_LEAVE', 'table'=>$table]];
+        $data = ['result'=>TRUE, 'message'=>'', 'data'=>['ACTION'=>'PLAYER_LEAVE', 'WIN'=>$win, 'LEAVE'=>$leave, 'table'=>$table]];
         return ['fds'=>$fds, 'data'=>$data];
     }
 

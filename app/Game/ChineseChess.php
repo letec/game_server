@@ -153,13 +153,7 @@ class ChineseChess extends BaseAction
             // game_over
             if ($check['kingKilled'])
             {
-                $table['STATUS'] = 0;
-                $table['USERS'][0]['status'] = 0;
-                $table['USERS'][1]['status'] = 0;
-                $table['GAMING_DATA']['CHESS_PANEL'] = $this->chessPanelInit($table['USERS']);
-                $table['GAMING_DATA']['TURN'] = '';
-                $this->redis->setex($userStatus['ROOM'], 24*60*60*30, json_encode($table));
-                return ['fds'=>$fds, 'data'=>['result'=>TRUE, 'message'=>'游戏结束', 'data'=>['ACTION'=>'GAME_OVER', 'WIN'=>$user->UserName, 'table'=>$table]]];
+                return $this->gameOver($fds, $user->UserName, $table, $userStatus['ROOM']);
             }
             else 
             {
@@ -180,6 +174,17 @@ class ChineseChess extends BaseAction
         }
 
         return ['result'=>FALSE, 'message'=>'不能下这一步棋', 'data'=>['ACTION'=>'MOVE', 'table'=>$table]];
+    }
+
+    private function gameOver($fds, $username, $table, $room)
+    {
+        $table['STATUS'] = 0;
+        $table['USERS'][0]['status'] = 0;
+        $table['USERS'][1]['status'] = 0;
+        $table['GAMING_DATA']['CHESS_PANEL'] = $this->chessPanelInit($table['USERS']);
+        $table['GAMING_DATA']['TURN'] = '';
+        $this->redis->setex($room, 24*60*60*30, json_encode($table));
+        return ['fds'=>$fds, 'data'=>['result'=>TRUE, 'message'=>'游戏结束', 'data'=>['ACTION'=>'GAME_OVER', 'WIN'=>$username, 'table'=>$table]]];
     }
 
     private function checkMoveTarget($matrix, $selectedObject, $targetObject, $selectedRow, $selectedCol, $targetRow, $targetCol, $color)
@@ -551,6 +556,14 @@ class ChineseChess extends BaseAction
         return ['fds'=>$fds, 'data'=>['result'=>TRUE, 'message'=>'', 'data'=>$resp]];
     }
 
-
+    public function giveUp($fd, $data, $user, $userStatus, $table)
+    {
+        foreach ($table['USERS'] as $k => $v)
+        {
+            if ($v['fd'] != '') $fds[] = $v['fd'];
+        }
+        $username = $user->UserName == $table['USERS'][0]['username'] ? $table['USERS'][1]['username'] : $table['USERS'][0]['username'];
+        return $this->gameOver($fds, $username, $table, $userStatus['ROOM']);
+    }
 
 }
