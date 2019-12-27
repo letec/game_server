@@ -7,5 +7,10 @@ return [
             'tableNumber'       => 50,
             'tableUserNumber'   => 2,
         ],
+        'LineFive' => [
+            'name'              => '五子棋',
+            'tableNumber'       => 50,
+            'tableUserNumber'   => 2,
+        ],
     ],
 ];

@@ -39,6 +39,11 @@ class WebSocketController implements OnMessageInterface, OnOpenInterface, OnClos
         $user = $this->redis->get('ONLINE_' . $oid);
         if ( ! $user)
         {
+            $result = $this->UserAction->cleanUserStatus($fd);
+            foreach ($result['fds'] as $fd)
+            {
+                $server->push($fd, json_encode($result['data']));
+            }
             $this->redis->del('ONLINE_' . $oid);
             return FALSE;
         }
@@ -72,6 +77,9 @@ class WebSocketController implements OnMessageInterface, OnOpenInterface, OnClos
                 break;
             case 'GAME_ACTION':
                 $result = $this->GameAction->action($frame->fd, $data, $user);
+                break;
+            case 'KEEP_ALIVE':
+                $server->push($frame->fd, json_encode(['result'=>FALSE, 'message'=>"KEEP_ALIVE", 'data'=>['ACTION'=>'KEEP_ALIVE']]));
                 break;
             default:
                 $server->push($frame->fd, json_encode(['result'=>FALSE, 'message'=>"WRONG_ACTION: {$action}", 'data'=>['ACTION'=>'WRONG_ACTION']]));
