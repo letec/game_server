@@ -122,7 +122,7 @@ class Printer
 		foreach ($class->getProperties() as $property) {
 			$type = $property->getType();
 			$def = (($property->getVisibility() ?: 'public') . ($property->isStatic() ? ' static' : '') . ' '
-				. ($type ? ($property->isNullable() ? '?' : '') . ($this->resolveTypes && $namespace ? $namespace->unresolveName($type) : $type) . ' ' : '')
+				. ltrim($this->printType($type, $property->isNullable(), $namespace) . ' ')
 				. '$' . $property->getName());
 
 			$properties[] = Helpers::formatDocComment((string) $property->getComment())
@@ -200,9 +200,7 @@ class Printer
 	}
 
 
-	/**
-	 * @return static
-	 */
+	/** @return static */
 	public function setTypeResolving(bool $state = true): self
 	{
 		$this->resolveTypes = $state;
@@ -241,16 +239,16 @@ class Printer
 
 
 	/**
-	 * @param Nette\PhpGenerator\Traits\FunctionLike  $function
+	 * @param Closure|GlobalFunction|Method  $function
 	 */
-	protected function printParameters($function, ?PhpNamespace $namespace): string
+	public function printParameters($function, PhpNamespace $namespace = null): string
 	{
 		$params = [];
 		$list = $function->getParameters();
 		foreach ($list as $param) {
 			$variadic = $function->isVariadic() && $param === end($list);
 			$type = $param->getType();
-			$params[] = ($type ? ($param->isNullable() ? '?' : '') . ($this->resolveTypes && $namespace ? $namespace->unresolveName($type) : $type) . ' ' : '')
+			$params[] = ltrim($this->printType($type, $param->isNullable(), $namespace) . ' ')
 				. ($param->isReference() ? '&' : '')
 				. ($variadic ? '...' : '')
 				. '$' . $param->getName()
@@ -263,13 +261,21 @@ class Printer
 	}
 
 
-	/**
-	 * @param Nette\PhpGenerator\Traits\FunctionLike  $function
-	 */
-	protected function printReturnType($function, ?PhpNamespace $namespace): string
+	public function printType(?string $type, bool $nullable = false, PhpNamespace $namespace = null): string
 	{
-		return $function->getReturnType()
-			? ': ' . ($function->isReturnNullable() ? '?' : '') . ($this->resolveTypes && $namespace ? $namespace->unresolveName($function->getReturnType()) : $function->getReturnType())
+		return $type
+			? ($nullable ? '?' : '') . ($this->resolveTypes && $namespace ? $namespace->unresolveName($type) : $type)
+			: '';
+	}
+
+
+	/**
+	 * @param Closure|GlobalFunction|Method  $function
+	 */
+	private function printReturnType($function, ?PhpNamespace $namespace): string
+	{
+		return ($tmp = $this->printType($function->getReturnType(), $function->isReturnNullable(), $namespace))
+			? ': ' . $tmp
 			: '';
 	}
 }

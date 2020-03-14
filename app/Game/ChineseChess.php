@@ -10,7 +10,7 @@ use Hyperf\Utils\ApplicationContext;
 class ChineseChess extends BaseAction
 {
 
-    private function chessPanelInit($users)
+    private function chessPanelInit()
     {
         $matrix = [];
         for ($x=1; $x <= 10; $x++) 
@@ -82,7 +82,7 @@ class ChineseChess extends BaseAction
             $table['STATUS'] = 1;
             $table['GAMING_DATA'] = [
                 'TOTAL_TIME'  => 40*60,
-                'CHESS_PANEL' => $this->chessPanelInit($table['USERS']),
+                'CHESS_PANEL' => $this->chessPanelInit(),
                 'TURN'        => $flag == 1 ? $table['USERS'][0]['username'] : $table['USERS'][1]['username']
             ];
             $data = ['result'=>TRUE, 'message'=>'', 'data'=>['ACTION'=>'START_GAME']];
@@ -181,7 +181,7 @@ class ChineseChess extends BaseAction
         $table['STATUS'] = 0;
         $table['USERS'][0]['status'] = 0;
         $table['USERS'][1]['status'] = 0;
-        $table['GAMING_DATA']['CHESS_PANEL'] = $this->chessPanelInit($table['USERS']);
+        $table['GAMING_DATA']['CHESS_PANEL'] = $this->chessPanelInit();
         $table['GAMING_DATA']['TURN'] = '';
         $this->redis->setex($room, 24*60*60*30, json_encode($table));
         return ['fds'=>$fds, 'data'=>['result'=>TRUE, 'message'=>'游戏结束', 'data'=>['ACTION'=>'GAME_OVER', 'WIN'=>$username, 'table'=>$table]]];

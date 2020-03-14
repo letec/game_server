@@ -13,7 +13,7 @@ declare(strict_types=1);
 return [
     'default' => [
         'driver' => env('DB_DRIVER', 'mysql'),
-        'host' => env('DB_HOST', '10.10.20.41'),
+        'host' => env('DB_HOST', '10.10.24.20'),
         'database' => env('DB_DATABASE', 'online'),
         'username' => env('DB_USERNAME', 'root'),
         'password' => env('DB_PASSWORD', 'root'),

@@ -16,7 +16,7 @@ final class MockScopeManager implements ScopeManager
     /**
      * {@inheritdoc}
      */
-    public function activate(Span $span, $finishSpanOnClose = true)
+    public function activate(Span $span, $finishSpanOnClose = ScopeManager::DEFAULT_FINISH_SPAN_ON_CLOSE)
     {
         $scope = new MockScope($this, $span, $finishSpanOnClose);
         $this->scopes[] = $scope;
@@ -37,11 +37,9 @@ final class MockScopeManager implements ScopeManager
 
     public function deactivate(MockScope $scope)
     {
-        $scopeLength = count($this->scopes);
-
-        for ($i = 0; $i < $scopeLength; $i++) {
-            if ($scope === $this->scopes[$i]) {
-                unset($this->scopes[$i]);
+        foreach ($this->scopes as $scopeIndex => $scopeItem) {
+            if ($scope === $scopeItem) {
+                unset($this->scopes[$scopeIndex]);
             }
         }
     }

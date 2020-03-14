@@ -53,7 +53,11 @@ class GameAction extends BaseAction
                 }
                 break;
             case 'REPLY_FOR_DRAW':
-                return $this->gameClass->replyForDraw($fd, $data, $user, $userStatus, $table);
+                if (in_array($table['gameCode'], ['ChineseChess']))
+                {
+                    return $this->gameClass->replyForDraw($fd, $data, $user, $userStatus, $table);
+                }
+                break;
             default:
                 break;
         }

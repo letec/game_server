@@ -108,9 +108,8 @@ class UserController extends AbstractController
         return $response->json(['result'=>TRUE, 'message'=>'注册成功!', 'data'=>NULL]);
     }
 
-    public function intohall(ResponseInterface $response)
+    public function intoHall(ResponseInterface $response)
     {
-        $user = $this->request->USER;
         $gameCode = $this->request->input('gameCode', '');
         $allGame = config('game.allGame');
         if ( ! isset($allGame[$gameCode]))

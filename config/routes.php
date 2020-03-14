@@ -20,10 +20,10 @@ Router::post('/signin', [App\Controller\UserController::class, 'signIn']);
 
 Router::post('/signup', [App\Controller\UserController::class, 'signUp']);
 
-Router::addGroup("/",
+Router::addGroup('/',
     function () {
         Router::post('user/quit', 'App\Controller\UserController@quit');
-        Router::post('user/intohall', 'App\Controller\UserController@intohall');
+        Router::post('user/intohall', 'App\Controller\UserController@intoHall');
         Router::post('user/info', 'App\Controller\UserController@info');
         Router::post('user/update', 'App\Controller\UserController@update');
         Router::post('hall', 'App\Controller\HallController@getHall');

@@ -39,11 +39,6 @@ class WebSocketController implements OnMessageInterface, OnOpenInterface, OnClos
         $user = $this->redis->get('ONLINE_' . $oid);
         if ( ! $user)
         {
-            $result = $this->UserAction->cleanUserStatus($fd);
-            foreach ($result['fds'] as $fd)
-            {
-                $server->push($fd, json_encode($result['data']));
-            }
             $this->redis->del('ONLINE_' . $oid);
             return FALSE;
         }
@@ -64,6 +59,11 @@ class WebSocketController implements OnMessageInterface, OnOpenInterface, OnClos
 
         if ( ! $user)
         {
+            $result = $this->UserAction->cleanUserStatus($frame->fd);
+            foreach ($result['fds'] as $fd)
+            {
+                $server->push($fd, json_encode($result['data']));
+            }
             $server->push($frame->fd, json_encode(['result'=>FALSE, 'message'=>'OFFLINE', 'data'=>['ACTION'=>'OFFLINE']]));
             $server->close($frame->fd);
             return;
@@ -99,7 +99,7 @@ class WebSocketController implements OnMessageInterface, OnOpenInterface, OnClos
         return;
     }
 
-    public function onClose(Server $server, int $fd, int $reactorId): void
+    public function onClose(Server $server, $fd, $reactorId): void
     {
         $result = $this->UserAction->cleanUserStatus($fd);
         foreach ($result['fds'] as $fd)

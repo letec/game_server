@@ -16,13 +16,13 @@ class Init
         $this->allGame = config('game.allGame');
 
         $this->container = ApplicationContext::getContainer();
-        $this->redis = $this->container->get(\Redis::class);
+        $this->redis = $this->container->get(Redis::class);
 
         foreach ($this->allGame as $key => $game) 
         {
-            $redisKey = "HALL_{$key}";
-            $result = $this->redis->keys($redisKey.'*');
-            $result && $this->redis->del($result);
+            $this->redis->del($this->redis->keys("HALL_{$key}".'*'));
+            $this->redis->del($this->redis->keys('USER_STATUS_*'));
+
             for ($t=1; $t<=$game['tableNumber']; $t++)
             {
                 $temp = ['gameCode'=>$key, 'TABLE_PANEL'=>[], 'USERS'=>[], 'STATUS'=>0];

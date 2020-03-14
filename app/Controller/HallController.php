@@ -27,7 +27,6 @@ class HallController extends AbstractController
 
     public function getHall(ResponseInterface $response)
     {
-        $user = $this->request->USER;
         $gameCode = $this->request->input('gameCode', '');
         $allGame = config('game.allGame');
         if ( ! isset($allGame[$gameCode]))
@@ -67,11 +66,7 @@ class HallController extends AbstractController
 
         $userStatus = $this->redis->get("USER_STATUS_{$user->id}");
         $userStatus = is_string($userStatus) ? json_decode($userStatus, TRUE) : [];
-        if ( ! isset($userStatus['SEAT']))
-        {
-            $userStatus = ['ROOM'=>$tableKey, 'SEAT'=>$seat];
-        }
-        else if ($userStatus['SEAT'] != '' && $userStatus['ROOM'] != '')
+        if ($userStatus['SEAT'] != '' && $userStatus['ROOM'] != '')
         {
             return $response->json(['result'=>FALSE, 'message'=>'您还在一个位置上!', 'data'=>NULL]);
         }
