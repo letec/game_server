@@ -66,7 +66,7 @@ class HallController extends AbstractController
 
         $userStatus = $this->redis->get("USER_STATUS_{$user->id}");
         $userStatus = is_string($userStatus) ? json_decode($userStatus, TRUE) : [];
-        if ($userStatus['SEAT'] != '' && $userStatus['ROOM'] != '')
+        if ( ! empty($userStatus['SEAT']) && ! empty($userStatus['ROOM']))
         {
             return $response->json(['result'=>FALSE, 'message'=>'您还在一个位置上!', 'data'=>NULL]);
         }
